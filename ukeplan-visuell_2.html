@@ -1,1 +1,412 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ukeplan — Uke 23–27 mars</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #0E0E0F;
+  --surface: #161618;
+  --surface2: #1E1E21;
+  --border: #2A2A2E;
+  --text: #F0EEE8;
+  --muted: #666466;
+  --fag: #4F8EF7;
+  --jobb: #3EC97A;
+  --avtale: #F76F4F;
+  --studer: #C97AE8;
+  --fag-bg: rgba(79,142,247,0.12);
+  --jobb-bg: rgba(62,201,122,0.12);
+  --avtale-bg: rgba(247,111,79,0.12);
+  --studer-bg: rgba(201,122,232,0.12);
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 32px 20px 60px;
+  background-image: radial-gradient(ellipse at 20% 0%, rgba(79,142,247,0.06) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 100%, rgba(201,122,232,0.06) 0%, transparent 60%);
+}
+.wrap { max-width: 1100px; margin: 0 auto; }
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.header-left h1 {
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.header-left h1 span { color: var(--fag); }
+.week-label {
+  font-family: 'Syne Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+.legend { display: flex; gap: 16px; flex-wrap: wrap; }
+.leg-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--muted);
+  font-family: 'Syne Mono', monospace; letter-spacing: 0.05em;
+}
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; }
+.reset-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px; letter-spacing: 0.08em;
+  padding: 6px 12px; border-radius: 6px;
+  cursor: pointer; transition: all 0.2s;
+}
+.reset-btn:hover { border-color: var(--avtale); color: var(--avtale); }
+.saved-badge {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px; color: var(--jobb);
+  opacity: 0; transition: opacity 0.3s; letter-spacing: 0.08em;
+}
+.saved-badge.show { opacity: 1; }
+.progress-bar-wrap { margin-bottom: 36px; }
+.progress-label {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--muted);
+  font-family: 'Syne Mono', monospace;
+  margin-bottom: 8px; letter-spacing: 0.08em;
+}
+.progress-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--fag), var(--studer));
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(.4,0,.2,1);
+  width: 0%;
+}
+.main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+@media (max-width: 800px) { .main-grid { grid-template-columns: 1fr; } }
+.days-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+@media (max-width: 700px) { .days-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 420px) { .days-grid { grid-template-columns: 1fr; } }
+.day-col {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden; transition: border-color 0.2s;
+}
+.day-col:hover { border-color: #3A3A40; }
+.day-col.today {
+  border-color: var(--fag);
+  box-shadow: 0 0 0 1px rgba(79,142,247,0.2), 0 4px 24px rgba(79,142,247,0.08);
+}
+.day-header { padding: 14px 14px 10px; border-bottom: 1px solid var(--border); }
+.day-name {
+  font-size: 10px; font-family: 'Syne Mono', monospace;
+  letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+.day-num { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin-top: 2px; }
+.today .day-num { color: var(--fag); }
+.day-events { padding: 10px 8px; display: flex; flex-direction: column; gap: 6px; min-height: 160px; }
+.event {
+  border-radius: 8px; padding: 8px 10px;
+  transition: transform 0.15s, opacity 0.15s;
+  animation: fadeUp 0.4s ease both;
+}
+.event:hover { transform: translateY(-1px); opacity: 0.9; }
+.event.fag    { background: var(--fag-bg);    border-left: 3px solid var(--fag); }
+.event.jobb   { background: var(--jobb-bg);   border-left: 3px solid var(--jobb); }
+.event.avtale { background: var(--avtale-bg); border-left: 3px solid var(--avtale); }
+.event.studer { background: var(--studer-bg); border-left: 3px solid var(--studer); }
+.event-time { font-family: 'Syne Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 3px; }
+.event-title { font-size: 11px; font-weight: 600; line-height: 1.3; color: var(--text); }
+.event-sub { font-size: 9px; color: var(--muted); margin-top: 2px; font-family: 'Syne Mono', monospace; }
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(8px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+.sidebar { display: flex; flex-direction: column; gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+.card-title {
+  font-size: 10px; font-family: 'Syne Mono', monospace;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title span {
+  background: var(--surface2); border-radius: 20px;
+  padding: 2px 10px; font-size: 10px; color: var(--text);
+}
+.fag-group { margin-bottom: 18px; }
+.fag-group:last-child { margin-bottom: 0; }
+.fag-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; margin-bottom: 8px;
+  padding: 4px 8px; border-radius: 4px; display: inline-block;
+}
+.fag-label.econ1210 { background: rgba(79,142,247,0.15); color: var(--fag); }
+.fag-label.hokon    { background: rgba(62,201,122,0.15); color: var(--jobb); }
+.check-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; transition: opacity 0.2s;
+}
+.check-item:last-child { border-bottom: none; }
+.check-item:hover { opacity: 0.8; }
+.check-item input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--border); border-radius: 4px;
+  cursor: pointer; flex-shrink: 0; margin-top: 1px;
+  transition: all 0.15s; position: relative;
+}
+.check-item input[type="checkbox"]:checked { background: var(--fag); border-color: var(--fag); }
+.check-item input[type="checkbox"]:checked::after {
+  content: '✓'; position: absolute; top: -1px; left: 2px;
+  font-size: 11px; color: white; font-weight: 700;
+}
+.check-item label { font-size: 12px; line-height: 1.4; cursor: pointer; color: var(--text); transition: color 0.2s; }
+.check-item input:checked + label { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--border); }
+.prio-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.prio-item:last-child { border-bottom: none; }
+.prio-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.prio-dot.high   { background: var(--avtale); box-shadow: 0 0 8px rgba(247,111,79,0.5); }
+.prio-dot.medium { background: #F7D44F; box-shadow: 0 0 8px rgba(247,212,79,0.4); }
+.prio-dot.low    { background: var(--jobb); box-shadow: 0 0 8px rgba(62,201,122,0.4); }
+.prio-text { font-size: 12px; line-height: 1.4; color: var(--text); }
+.prio-text small { display: block; font-size: 10px; color: var(--muted); font-family: 'Syne Mono', monospace; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
 
+  <div class="header">
+    <div class="header-left">
+      <h1>Uke <span>23–27</span><br>Mars 2026</h1>
+      <div class="week-label">📍 Oslo · Studentplan</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px;">
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:var(--fag)"></div>Forelesning</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--jobb)"></div>Jobb</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--avtale)"></div>Avtale</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--studer)"></div>Studer</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="saved-badge" id="savedBadge">✓ Lagret</span>
+        <button class="reset-btn" onclick="resetAll()">Nullstill sjekkliste</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-label">
+      <span>Oppgaver fullført</span>
+      <span id="progressText">0 / 21</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <div class="main-grid">
+    <div class="calendar-section">
+      <div class="days-grid">
+
+        <div class="day-col today">
+          <div class="day-header"><div class="day-name">Man</div><div class="day-num">23</div></div>
+          <div class="day-events">
+            <div class="event fag" style="animation-delay:.05s">
+              <div class="event-time">08:15–10:00</div><div class="event-title">ECON2500</div><div class="event-sub">Forelesning</div>
+            </div>
+            <div class="event avtale" style="animation-delay:.1s">
+              <div class="event-time">13:00–14:00</div><div class="event-title">Helsesjekk</div><div class="event-sub">🩺 Lege</div>
+            </div>
+            <div class="event studer" style="animation-delay:.15s">
+              <div class="event-time">14:00–16:00</div><div class="event-title">HØKON3001</div><div class="event-sub">Oppg. 1.1a–b</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="day-col">
+          <div class="day-header"><div class="day-name">Tir</div><div class="day-num">24</div></div>
+          <div class="day-events">
+            <div class="event jobb" style="animation-delay:.1s">
+              <div class="event-time">08:00–16:00</div><div class="event-title">Jobb</div><div class="event-sub">Kundeservice</div>
+            </div>
+            <div class="event fag" style="animation-delay:.15s">
+              <div class="event-time">16:15–18:00</div><div class="event-title">ECON2500</div><div class="event-sub">Seminar 1</div>
+            </div>
+            <div class="event studer" style="animation-delay:.2s">
+              <div class="event-time">18:00–20:00</div><div class="event-title">ECON1210</div><div class="event-sub">Monopol 9.1a–c</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="day-col">
+          <div class="day-header"><div class="day-name">Ons</div><div class="day-num">25</div></div>
+          <div class="day-events">
+            <div class="event fag" style="animation-delay:.1s">
+              <div class="event-time">10:15–12:00</div><div class="event-title">ECON1210</div><div class="event-sub">Forelesning</div>
+            </div>
+            <div class="event avtale" style="animation-delay:.15s">
+              <div class="event-time">12:30–14:30</div><div class="event-title">Volvat</div><div class="event-sub">🩺 ADHD utredning</div>
+            </div>
+            <div class="event studer" style="animation-delay:.2s">
+              <div class="event-time">18:00–20:00</div><div class="event-title">HØKON3001</div><div class="event-sub">Oppg. 1.2 + 9.2</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="day-col">
+          <div class="day-header"><div class="day-name">Tor</div><div class="day-num">26</div></div>
+          <div class="day-events">
+            <div class="event jobb" style="animation-delay:.1s">
+              <div class="event-time">08:00–15:00</div><div class="event-title">Jobb</div><div class="event-sub">Kundeservice</div>
+            </div>
+            <div class="event fag" style="animation-delay:.15s">
+              <div class="event-time">14:15–16:00</div><div class="event-title">HØKON3001</div><div class="event-sub">Forelesning</div>
+            </div>
+            <div class="event fag" style="animation-delay:.2s">
+              <div class="event-time">14:15–16:00</div><div class="event-title">ECON1210</div><div class="event-sub">Seminar 3</div>
+            </div>
+            <div class="event studer" style="animation-delay:.25s">
+              <div class="event-time">19:00–20:00</div><div class="event-title">ECON1210</div><div class="event-sub">Monopol 9.3</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="day-col">
+          <div class="day-header"><div class="day-name">Fre</div><div class="day-num">27</div></div>
+          <div class="day-events">
+            <div class="event avtale" style="animation-delay:.1s">
+              <div class="event-time">15:00–16:00</div><div class="event-title">Psykiater</div><div class="event-sub">🩺 Borgenveien 2A</div>
+            </div>
+            <div class="event studer" style="animation-delay:.15s">
+              <div class="event-time">18:00–20:00</div><div class="event-title">Buffer</div><div class="event-sub">Innhenting / rep.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="card">
+        <div class="card-title">Prioritet denne uken</div>
+        <div class="prio-item">
+          <div class="prio-dot high"></div>
+          <div class="prio-text">HØKON3001 Oppg. 1.1<small>Start mandag — krever Excel + SSB</small></div>
+        </div>
+        <div class="prio-item">
+          <div class="prio-dot high"></div>
+          <div class="prio-text">ECON1210 Monopol<small>Ferdig før seminar torsdag</small></div>
+        </div>
+        <div class="prio-item">
+          <div class="prio-dot medium"></div>
+          <div class="prio-text">HØKON3001 Oppg. 1.2<small>Onsdag kveld</small></div>
+        </div>
+        <div class="prio-item">
+          <div class="prio-dot low"></div>
+          <div class="prio-text">Buffer / innhenting<small>Fredag ettermiddag</small></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Oppgaver <span id="checkCount">0/21</span></div>
+        <div class="fag-group">
+          <div class="fag-label hokon">HØKON3001</div>
+          <div class="check-item"><input type="checkbox" id="h1"><label for="h1">1.1a — Antall med demens 1993–2023</label></div>
+          <div class="check-item"><input type="checkbox" id="h2"><label for="h2">1.1b — Prosentvis økning</label></div>
+          <div class="check-item"><input type="checkbox" id="h3"><label for="h3">1.1c — Prosentandel av innbyggere</label></div>
+          <div class="check-item"><input type="checkbox" id="h4"><label for="h4">1.1d — Gjennomsnittlig vekstrate (Excel)</label></div>
+          <div class="check-item"><input type="checkbox" id="h5"><label for="h5">1.1e — Dobling ved 1,5% vekst</label></div>
+          <div class="check-item"><input type="checkbox" id="h6"><label for="h6">1.2a — Hjerteinfarkt: medisin vs placebo</label></div>
+          <div class="check-item"><input type="checkbox" id="h7"><label for="h7">1.2b — Relativ reduksjon i dødsfall</label></div>
+          <div class="check-item"><input type="checkbox" id="h8"><label for="h8">1.2c — Kostnadseffektivitet</label></div>
+          <div class="check-item"><input type="checkbox" id="h9"><label for="h9">1.2d — Kostnadseffektiv ved 15 mill.?</label></div>
+          <div class="check-item"><input type="checkbox" id="h10"><label for="h10">1.2e — Helseøkonomisk evaluering</label></div>
+          <div class="check-item"><input type="checkbox" id="h11"><label for="h11">1.2f — Beregn ICER</label></div>
+        </div>
+        <div class="fag-group">
+          <div class="fag-label econ1210">ECON1210 — Monopol</div>
+          <div class="check-item"><input type="checkbox" id="e1"><label for="e1">9.1a — Naturlig monopol</label></div>
+          <div class="check-item"><input type="checkbox" id="e2"><label for="e2">9.1b — Tegn etterspørsel, MK, GK</label></div>
+          <div class="check-item"><input type="checkbox" id="e3"><label for="e3">9.1c — Marginalinntekt</label></div>
+          <div class="check-item"><input type="checkbox" id="e4"><label for="e4">9.1d — Monopolpris og -mengde</label></div>
+          <div class="check-item"><input type="checkbox" id="e5"><label for="e5">9.1e — Samfunnsøkonomisk optimal mengde</label></div>
+          <div class="check-item"><input type="checkbox" id="e6"><label for="e6">9.1f — Underskudd og samfunnsøkonomi</label></div>
+          <div class="check-item"><input type="checkbox" id="e7"><label for="e7">9.2 — Konkurransepolitikk / fusjon</label></div>
+          <div class="check-item"><input type="checkbox" id="e8"><label for="e8">9.3a — Monopolistisk konkurranse</label></div>
+          <div class="check-item"><input type="checkbox" id="e9"><label for="e9">9.3b — Prisfastsettelse</label></div>
+          <div class="check-item"><input type="checkbox" id="e10"><label for="e10">9.3c — Langsiktig likevekt (ekstra)</label></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'ukeplan_2026_uke13';
+  const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+  const total = checkboxes.length;
+  const fill = document.getElementById('progressFill');
+  const progText = document.getElementById('progressText');
+  const countText = document.getElementById('checkCount');
+  const savedBadge = document.getElementById('savedBadge');
+  let saveTimer;
+
+  function save() {
+    const state = {};
+    checkboxes.forEach(cb => { state[cb.id] = cb.checked; });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    savedBadge.classList.add('show');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => savedBadge.classList.remove('show'), 2000);
+  }
+
+  function load() {
+    try {
+      const state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      checkboxes.forEach(cb => { if (state[cb.id]) cb.checked = true; });
+    } catch(e) {}
+  }
+
+  function updateProgress() {
+    const done = [...checkboxes].filter(c => c.checked).length;
+    const pct = Math.round((done / total) * 100);
+    fill.style.width = pct + '%';
+    progText.textContent = done + ' / ' + total;
+    countText.textContent = done + '/' + total;
+  }
+
+  function resetAll() {
+    if (confirm('Nullstille alle avkrysninger?')) {
+      checkboxes.forEach(cb => cb.checked = false);
+      localStorage.removeItem(STORAGE_KEY);
+      updateProgress();
+    }
+  }
+
+  checkboxes.forEach(cb => cb.addEventListener('change', () => {
+    updateProgress();
+    save();
+  }));
+
+  load();
+  updateProgress();
+</script>
+</body>
+</html>
